@@ -164,6 +164,9 @@ public class User {
 
     public void setAddresses(Set<Address> addresses) {
         this.addresses = addresses;
+        for (Address address : addresses) {
+            address.setUser(this);
+        }
     }
 
     public Set<Role> getRoles() {

@@ -11,7 +11,7 @@
     </parent>
 
     <artifactId>service-registry</artifactId>
-    <packaging>jar</packaging>
+    <version>${parent.version}</version>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
