@@ -2,6 +2,8 @@ package com.jocata.oms.datamodel.um.entity;
 
 import jakarta.persistence.*;
 
+import java.util.Set;
+
 @Entity
 @Table(name = "permissions")
 public class Permission {
@@ -11,8 +13,11 @@ public class Permission {
     @Column(name = "permission_id")
     private Integer permissionId;
 
-    @Column(name = "permission_name",unique = true,nullable = false)
+    @Column(name = "permission_name", unique = true, nullable = false)
     private String permissionName;
+
+    @ManyToMany(mappedBy = "permissions")
+    private Set<Role> roles;
 
     public Integer getPermissionId() {
         return permissionId;
@@ -28,5 +33,13 @@ public class Permission {
 
     public void setPermissionName(String permissionName) {
         this.permissionName = permissionName;
+    }
+
+    public Set<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
     }
 }
