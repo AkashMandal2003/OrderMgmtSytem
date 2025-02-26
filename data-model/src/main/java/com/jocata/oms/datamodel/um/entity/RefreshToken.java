@@ -14,7 +14,7 @@ public class RefreshToken {
     @Column(name = "token_id")
     private Integer tokenId;
 
-    @ManyToOne(cascade = CascadeType.REMOVE)
+    @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 

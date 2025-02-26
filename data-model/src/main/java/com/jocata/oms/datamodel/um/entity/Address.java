@@ -14,7 +14,7 @@ public class Address {
     @Column(name = "address_id")
     private Integer addressId;
 
-    @ManyToOne(cascade = CascadeType.REMOVE,fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
@@ -33,7 +33,7 @@ public class Address {
     @Column(name = "zip_code", nullable = false)
     private String zipCode;
 
-    @Column(name = "created_at",updatable = false)
+    @Column(name = "created_at", updatable = false)
     private Timestamp createdAt = Timestamp.from(Instant.now());
 
     @Column(name = "updated_at")
