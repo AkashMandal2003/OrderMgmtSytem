@@ -1,11 +1,8 @@
 package com.jocata.oms.datamodel.um.form;
 
-import com.jocata.oms.datamodel.um.entity.User;
-import jakarta.persistence.Column;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-
 public class AddressForm {
+
+    private String addressId;
 
     private String address;
 
@@ -16,6 +13,14 @@ public class AddressForm {
     private String country;
 
     private String zipCode;
+
+    public String getAddressId() {
+        return addressId;
+    }
+
+    public void setAddressId(String addressId) {
+        this.addressId = addressId;
+    }
 
     public String getAddress() {
         return address;
@@ -56,4 +61,5 @@ public class AddressForm {
     public void setZipCode(String zipCode) {
         this.zipCode = zipCode;
     }
+
 }

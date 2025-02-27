@@ -18,4 +18,14 @@ public class RoleDaoImpl implements RoleDao {
     public Role createRole(Role role) {
         return hibernateConfig.saveEntity(role);
     }
+
+    @Override
+    public Role getRoleById(Integer id) {
+        return hibernateConfig.findEntityById(Role.class, id);
+    }
+
+    @Override
+    public Role updateRole(Role role) {
+        return hibernateConfig.updateEntity(role);
+    }
 }

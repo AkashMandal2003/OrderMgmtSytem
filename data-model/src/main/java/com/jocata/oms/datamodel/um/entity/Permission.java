@@ -16,7 +16,7 @@ public class Permission {
     @Column(name = "permission_name", unique = true, nullable = false)
     private String permissionName;
 
-    @ManyToMany(mappedBy = "permissions")
+    @ManyToMany(mappedBy = "permissions",cascade = CascadeType.ALL)
     private Set<Role> roles;
 
     public Integer getPermissionId() {

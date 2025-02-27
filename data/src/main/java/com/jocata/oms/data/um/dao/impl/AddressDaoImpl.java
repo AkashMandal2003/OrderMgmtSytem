@@ -18,4 +18,15 @@ public class AddressDaoImpl implements AddressDao {
     public Address createAddress(Address address) {
         return hibernateConfig.saveEntity(address);
     }
+
+    @Override
+    public Address getAddressById(Integer id) {
+        return hibernateConfig.findEntityById(Address.class, id);
+    }
+
+    @Override
+    public Address updateAddress(Address address) {
+        return hibernateConfig.updateEntity(address);
+    }
+
 }

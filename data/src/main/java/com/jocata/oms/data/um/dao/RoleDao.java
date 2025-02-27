@@ -6,4 +6,8 @@ public interface RoleDao {
 
     Role createRole(Role role);
 
+    Role getRoleById(Integer id);
+
+    Role updateRole(Role role);
+
 }

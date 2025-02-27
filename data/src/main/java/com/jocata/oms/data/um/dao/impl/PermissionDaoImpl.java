@@ -18,4 +18,15 @@ public class PermissionDaoImpl implements PermissionDao {
     public Permission createPermission(Permission permission) {
         return hibernateConfig.saveEntity(permission);
     }
+
+    @Override
+    public Permission getPermissionById(Integer id) {
+        return hibernateConfig.findEntityById(Permission.class, id);
+    }
+
+    @Override
+    public Permission updatePermission(Permission permission) {
+        return hibernateConfig.updateEntity(permission);
+    }
+
 }

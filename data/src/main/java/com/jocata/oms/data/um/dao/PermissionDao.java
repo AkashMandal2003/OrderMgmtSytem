@@ -6,4 +6,8 @@ public interface PermissionDao {
 
     Permission createPermission(Permission permission);
 
+    Permission getPermissionById(Integer id);
+
+    Permission updatePermission(Permission permission);
+
 }

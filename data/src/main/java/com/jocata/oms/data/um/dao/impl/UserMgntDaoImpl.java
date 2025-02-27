@@ -5,6 +5,8 @@ import com.jocata.oms.data.um.dao.UserMgntDao;
 import com.jocata.oms.datamodel.um.entity.User;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public class UserMgntDaoImpl implements UserMgntDao {
 
@@ -25,12 +27,17 @@ public class UserMgntDaoImpl implements UserMgntDao {
     }
 
     @Override
+    public List<User> getAllUsers() {
+        return hibernateConfig.loadEntitiesByCriteria(User.class);
+    }
+
+    @Override
     public User updateUser(User user) {
         return hibernateConfig.updateEntity(user);
     }
 
     @Override
-    public void deleteUser(User user) {
-        hibernateConfig.deleteEntity(user,user.getUserId());
+    public User deleteUser(User user) {
+        return hibernateConfig.softDeleteEntity(user);
     }
 }
