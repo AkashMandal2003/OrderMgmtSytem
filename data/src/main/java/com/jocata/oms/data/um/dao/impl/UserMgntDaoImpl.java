@@ -5,7 +5,9 @@ import com.jocata.oms.data.um.dao.UserMgntDao;
 import com.jocata.oms.datamodel.um.entity.User;
 import org.springframework.stereotype.Repository;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Repository
 public class UserMgntDaoImpl implements UserMgntDao {
@@ -27,6 +29,19 @@ public class UserMgntDaoImpl implements UserMgntDao {
     }
 
     @Override
+    public User findByEmail(String email) {
+        return hibernateConfig.findEntityByCriteria(User.class, "email", email);
+    }
+
+    @Override
+    public User findUserByEmailAndPass(String email, String password) {
+        Map<String,Object> params = new HashMap<>();
+        params.put("email", email);
+        params.put("passwordHash", password);
+        return hibernateConfig.findEntityByMultipleCriteria(User.class,params);
+    }
+
+    @Override
     public List<User> getAllUsers() {
         return hibernateConfig.loadEntitiesByCriteria(User.class);
     }
@@ -37,7 +52,13 @@ public class UserMgntDaoImpl implements UserMgntDao {
     }
 
     @Override
-    public User deleteUser(User user) {
+    public User softDeleteUser(User user) {
         return hibernateConfig.softDeleteEntity(user);
     }
+
+    @Override
+    public User permanentDeleteUser(User user) {
+        return hibernateConfig.deleteEntity(user,user.getUserId());
+    }
+
 }

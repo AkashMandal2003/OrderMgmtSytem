@@ -6,13 +6,16 @@ import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
+import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.criteria.JpaRoot;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class HibernateConfig {
@@ -126,6 +129,62 @@ public class HibernateConfig {
         return null;
     }
 
+    public <T> T findEntityByCriteria(Class<T> entityClass, String primaryPropertyName, Serializable primaryId) {
+
+        Session session = null;
+        try {
+            session = this.getSession();
+            HibernateCriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+            JpaCriteriaQuery<T> criteriaQuery = criteriaBuilder.createQuery(entityClass);
+            JpaRoot<T> root = criteriaQuery.from(entityClass);
+
+            String[] props = checkIfSplit(primaryPropertyName);
+            if(props.length == 2) {
+                criteriaQuery.select(root).where(criteriaBuilder.equal(root.get(props[0]).get(props[1]), primaryId));
+            }else {
+                criteriaQuery.select(root).where(criteriaBuilder.equal(root.get(primaryPropertyName), primaryId));
+            }
+
+            return session.createQuery(criteriaQuery).getSingleResult();
+        } catch (Exception e) {
+            session.getTransaction().rollback();
+        } finally {
+            this.closeSession(session);
+        }
+        return null;
+    }
+
+    public <T> T findEntityByMultipleCriteria(Class<T> entityClass, Map<String, Object> criteriaMap) {
+        Session session = null;
+        try {
+            session = this.getSession();
+            HibernateCriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+            JpaCriteriaQuery<T> criteriaQuery = criteriaBuilder.createQuery(entityClass);
+            JpaRoot<T> root = criteriaQuery.from(entityClass);
+
+            List<JpaPredicate> predicates = new ArrayList<>();
+            for (Map.Entry<String, Object> entry : criteriaMap.entrySet()) {
+                String propertyName = entry.getKey();
+                Object propertyValue = entry.getValue();
+
+                String[] props = checkIfSplit(propertyName);
+                if (props.length == 2) {
+                    predicates.add(criteriaBuilder.equal(root.get(props[0]).get(props[1]), propertyValue));
+                } else {
+                    predicates.add(criteriaBuilder.equal(root.get(propertyName), propertyValue));
+                }
+            }
+
+            criteriaQuery.select(root).where(criteriaBuilder.and(predicates.toArray(new JpaPredicate[0])));
+            return session.createQuery(criteriaQuery).getSingleResult();
+        } catch (Exception e) {
+            session.getTransaction().rollback();
+        } finally {
+            this.closeSession(session);
+        }
+        return null;
+    }
+
     public <T> List<T> loadEntitiesByCriteria(Class<T> entityClass) {
         Session session = null;
         try {
@@ -146,4 +205,10 @@ public class HibernateConfig {
         }
         return Collections.emptyList();
     }
+
+    private String[] checkIfSplit(String primaryPropertyName) {
+        return primaryPropertyName.split("\\.");
+    }
+
+
 }

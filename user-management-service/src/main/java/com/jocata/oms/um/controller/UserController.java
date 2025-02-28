@@ -2,6 +2,7 @@ package com.jocata.oms.um.controller;
 
 import com.jocata.oms.common.request.GenericRequestPayload;
 import com.jocata.oms.common.response.GenericResponsePayload;
+import com.jocata.oms.datamodel.um.form.SignInForm;
 import com.jocata.oms.datamodel.um.form.UserForm;
 import com.jocata.oms.um.service.UserService;
 import org.springframework.http.HttpStatus;
@@ -14,7 +15,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/user")
+@RequestMapping("/api/v1/users")
 public class UserController {
 
     private final UserService userService;
@@ -23,7 +24,7 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping("/register")
+    @PostMapping("/public/register")
     public ResponseEntity<GenericResponsePayload<UserForm>> registerUser(@RequestBody GenericRequestPayload<UserForm> genericRequestPayload) {
         UserForm userForm = userService.registerUser(genericRequestPayload.getData());
         return new ResponseEntity<GenericResponsePayload<UserForm>>(
@@ -35,7 +36,8 @@ public class UserController {
                 HttpStatus.CREATED);
     }
 
-    @GetMapping("/{userId}")
+
+    @GetMapping("/user/{userId}")
     public ResponseEntity<GenericResponsePayload<?>> getUser(@PathVariable Integer userId) {
         UserForm userById = userService.getUserById(userId);
         return ResponseEntity.ok(new GenericResponsePayload<>(
@@ -47,7 +49,32 @@ public class UserController {
         ));
     }
 
-    @GetMapping
+    @GetMapping("/user")
+    public ResponseEntity<GenericResponsePayload<?>> getUserByEmail(@RequestParam String email) {
+        UserForm userByEmail = userService.getUserByEmail(email);
+        return ResponseEntity.ok(new GenericResponsePayload<>(
+                UUID.randomUUID().toString(),
+                String.valueOf(Timestamp.from(Instant.now())),
+                userByEmail != null ? HttpStatus.FOUND.toString() : HttpStatus.NOT_FOUND.toString(),
+                HttpStatus.Series.SUCCESSFUL.toString(),
+                userByEmail != null ? userByEmail : "User not found"
+        ));
+    }
+
+
+    @GetMapping("/public/sign-in")
+    public ResponseEntity<GenericResponsePayload<?>> signIn(@RequestBody GenericRequestPayload<SignInForm> genericRequestPayload) {
+        UserForm userByEmailAndPass = userService.getUserByEmail(genericRequestPayload.getData().getEmail(), genericRequestPayload.getData().getPassword());
+        return ResponseEntity.ok(new GenericResponsePayload<>(
+                UUID.randomUUID().toString(),
+                String.valueOf(Timestamp.from(Instant.now())),
+                userByEmailAndPass != null ? HttpStatus.FOUND.toString() : HttpStatus.NOT_FOUND.toString(),
+                HttpStatus.Series.SUCCESSFUL.toString(),
+                userByEmailAndPass != null ? userByEmailAndPass : "User not found"
+        ));
+    }
+
+    @GetMapping("/admin/allusers")
     public ResponseEntity<GenericResponsePayload<List<UserForm>>> getAllUsers() {
         List<UserForm> users = userService.getAllUsers();
         return ResponseEntity.ok(
@@ -61,7 +88,7 @@ public class UserController {
         );
     }
 
-    @PutMapping("/update-user")
+    @PutMapping("/user/update-user")
     public ResponseEntity<GenericResponsePayload<UserForm>> updateUser(@RequestBody GenericRequestPayload<UserForm> genericRequestPayload) {
         UserForm userForm = userService.updateUser(genericRequestPayload.getData());
         return ResponseEntity.ok(new GenericResponsePayload<UserForm>(genericRequestPayload.getRequestId(),
@@ -72,9 +99,9 @@ public class UserController {
         ));
     }
 
-    @DeleteMapping("/{userId}")
-    public ResponseEntity<GenericResponsePayload<String>> deleteUser(@PathVariable Integer userId) {
-        String message = userService.deleteUser(userId);
+    @DeleteMapping("/user/{userId}")
+    public ResponseEntity<GenericResponsePayload<String>> deleteUser(@PathVariable Integer userId, @RequestParam Boolean isHardDelete) {
+        String message = userService.deleteUser(userId,isHardDelete);
         return ResponseEntity.ok(new GenericResponsePayload<String>(
                 UUID.randomUUID().toString(),
                 String.valueOf(Timestamp.from(Instant.now())),
