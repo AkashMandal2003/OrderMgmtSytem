@@ -10,10 +10,16 @@ public interface UserMgntDao {
 
     User finUserById(Integer id);
 
+    User findByEmail(String email);
+
+    User findUserByEmailAndPass(String email, String password);
+
     List<User> getAllUsers();
 
     User updateUser(User user);
 
-    User deleteUser(User user);
+    User softDeleteUser(User user);
+
+    User permanentDeleteUser(User user);
 
 }

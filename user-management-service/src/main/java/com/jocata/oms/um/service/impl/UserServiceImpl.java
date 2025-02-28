@@ -49,7 +49,19 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserForm getUserById(Integer userId) {
         User user = userMgntDao.finUserById(userId);
-        return user.getDeletedAt()!= null? null : getUserForm(user);
+        return user.getDeletedAt()!= null ? null : getUserForm(user);
+    }
+
+    @Override
+    public UserForm getUserByEmail(String email) {
+        User byEmail = userMgntDao.findByEmail(email);
+        return byEmail.getDeletedAt()!= null ? null : getUserForm(byEmail);
+    }
+
+    @Override
+    public UserForm getUserByEmail(String email, String password) {
+        User userByEmail = userMgntDao.findUserByEmailAndPass(email, password);
+        return userByEmail.getDeletedAt()!= null ? null : getUserForm(userByEmail);
     }
 
     @Override
@@ -141,12 +153,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String deleteUser(Integer userId) {
+    public String deleteUser(Integer userId, Boolean isHardDelete) {
         User user = userMgntDao.finUserById(userId);
+        if(isHardDelete){
+            userMgntDao.permanentDeleteUser(user);
+            return "User deleted successfully via hard Delete.";
+        }
         user.setDeletedAt(Timestamp.from(Instant.now()));
-
-        User deletedUser = userMgntDao.deleteUser(user);
-        return deletedUser.getDeletedAt()!=null? "User deleted successfully." : "User not deleted..";
+        User deletedUser = userMgntDao.softDeleteUser(user);
+        return deletedUser.getDeletedAt() != null ? "User deleted successfully via soft delete." : "User not deleted..";
     }
 
     private User getUser(UserForm user) {

@@ -10,9 +10,13 @@ public interface UserService {
 
     UserForm getUserById(Integer userId);
 
+    UserForm getUserByEmail(String email);
+
+    UserForm getUserByEmail(String email, String password);
+
     List<UserForm> getAllUsers();
 
     UserForm updateUser(UserForm user);
 
-    String deleteUser(Integer userId);
+    String deleteUser(Integer userId, Boolean isHardDelete);
 }
