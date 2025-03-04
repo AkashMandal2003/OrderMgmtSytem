@@ -4,6 +4,7 @@ import com.jocata.oms.common.request.GenericRequestPayload;
 import com.jocata.oms.common.response.GenericResponsePayload;
 import com.jocata.oms.datamodel.um.form.SignInForm;
 import com.jocata.oms.datamodel.um.form.UserForm;
+import com.jocata.oms.um.jwt.JWTService;
 import com.jocata.oms.um.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -19,9 +21,11 @@ import java.util.UUID;
 public class UserController {
 
     private final UserService userService;
+    private final JWTService jwtService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, JWTService jwtService) {
         this.userService = userService;
+        this.jwtService = jwtService;
     }
 
     @PostMapping("/public/register")
@@ -64,13 +68,30 @@ public class UserController {
 
     @GetMapping("/public/sign-in")
     public ResponseEntity<GenericResponsePayload<?>> signIn(@RequestBody GenericRequestPayload<SignInForm> genericRequestPayload) {
-        UserForm userByEmailAndPass = userService.getUserByEmail(genericRequestPayload.getData().getEmail(), genericRequestPayload.getData().getPassword());
+        UserForm userByEmailAndPass = userService.getUserByEmail(
+                genericRequestPayload.getData().getEmail(),
+                genericRequestPayload.getData().getPassword());
+
+        if (userByEmailAndPass == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new GenericResponsePayload<>(
+                    UUID.randomUUID().toString(),
+                    String.valueOf(Timestamp.from(Instant.now())),
+                    HttpStatus.NOT_FOUND.toString(),
+                    HttpStatus.Series.CLIENT_ERROR.toString(),
+                    "User not found"
+            ));
+        }
+
+        //Generate JWT Token with role
+        String token = jwtService.generateToken(userByEmailAndPass.getEmail(),userByEmailAndPass.getRoles());
+
+        //Return token + user details
         return ResponseEntity.ok(new GenericResponsePayload<>(
                 UUID.randomUUID().toString(),
                 String.valueOf(Timestamp.from(Instant.now())),
-                userByEmailAndPass != null ? HttpStatus.FOUND.toString() : HttpStatus.NOT_FOUND.toString(),
+                HttpStatus.OK.toString(),
                 HttpStatus.Series.SUCCESSFUL.toString(),
-                userByEmailAndPass != null ? userByEmailAndPass : "User not found"
+                Map.of("user", userByEmailAndPass, "token", token)
         ));
     }
 
