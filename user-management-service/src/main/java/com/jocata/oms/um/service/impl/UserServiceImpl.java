@@ -234,6 +234,7 @@ public class UserServiceImpl implements UserService {
         userForm.setFullName(user.getFullName());
         userForm.setEmail(user.getEmail());
         userForm.setPhone(user.getPhone());
+        userForm.setPasswordHash(user.getPasswordHash());
         userForm.setProfilePicture(user.getProfilePicture());
         userForm.setOtpSecret(user.getOtpSecret());
 
