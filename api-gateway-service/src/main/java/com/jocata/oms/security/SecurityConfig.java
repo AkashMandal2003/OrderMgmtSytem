@@ -17,6 +17,7 @@ import org.springframework.security.web.server.authentication.ServerAuthenticati
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+//Not working
 
 @Configuration
 @EnableWebFluxSecurity
@@ -83,5 +84,6 @@ public class SecurityConfig {
                 .map(authHeader -> authHeader.substring(6))
                 .map(authToken -> new UsernamePasswordAuthenticationToken(authToken, authToken));
     }
+
 
 }
