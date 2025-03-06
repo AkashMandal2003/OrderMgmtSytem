@@ -11,6 +11,7 @@ import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.ServerAuthenticationEntryPoint;
+import org.springframework.security.web.server.authorization.ServerAccessDeniedHandler;
 import reactor.core.publisher.Mono;
 
 @Configuration
@@ -35,6 +36,7 @@ public class SecurityConfig {
                 )
                 .exceptionHandling(exceptionHandling -> exceptionHandling
                         .authenticationEntryPoint(customAuthenticationEntryPoint())
+                        .accessDeniedHandler(customAccessDeniedHandler())
                 )
                 .addFilterBefore(authenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION);
 
@@ -51,6 +53,26 @@ public class SecurityConfig {
                             "status": 401,
                             "error": "Unauthorized",
                             "message": "Access Denied! Please provide valid credentials."
+                        }
+                    """;
+            return exchange.getResponse().writeWith(
+                    Mono.just(exchange.getResponse()
+                            .bufferFactory()
+                            .wrap(body.getBytes()))
+            );
+        };
+    }
+
+    @Bean
+    public ServerAccessDeniedHandler customAccessDeniedHandler() {
+        return (exchange, ex) -> {
+            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+            exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
+            String body = """
+                        {
+                            "status": 401,
+                            "error": "Unauthorized",
+                            "message": "You do not have permission to access this resource."
                         }
                     """;
             return exchange.getResponse().writeWith(
