@@ -9,6 +9,7 @@ import com.jocata.oms.um.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -38,6 +39,13 @@ public class UserController {
                         HttpStatus.Series.SUCCESSFUL.toString()
                         , userForm),
                 HttpStatus.CREATED);
+    }
+
+
+    @PostMapping("/public/upload")
+    public ResponseEntity<Map<String, Object>> uploadUsers(@RequestParam("file") MultipartFile file) {
+        Map<String, Object> response = userService.createUsersFromFile(file);
+        return ResponseEntity.ok(response);
     }
 
 

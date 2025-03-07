@@ -13,14 +13,18 @@ import com.jocata.oms.datamodel.um.form.PermissionForm;
 import com.jocata.oms.datamodel.um.form.RoleForm;
 import com.jocata.oms.datamodel.um.form.UserForm;
 import com.jocata.oms.um.service.UserService;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -44,6 +48,113 @@ public class UserServiceImpl implements UserService {
         User savedUser = userMgntDao.createUser(newUser);
         return getUserForm(savedUser);
 
+    }
+
+    @Override
+    public Map<String, Object> createUsersFromFile(MultipartFile file) {
+        Map<String, Object> response = new HashMap<>();
+        List<String> errors = new ArrayList<>();
+        List<UserForm> createdUsers = new ArrayList<>();
+
+        try (InputStream inputStream = file.getInputStream()) {
+            Workbook workbook = WorkbookFactory.create(inputStream);
+            Sheet sheet = workbook.getSheetAt(0);
+
+
+            for (Row row : sheet) {
+                if (row.getRowNum() == 0) continue;
+                try {
+                    User user = new User();
+                    user.setFullName(row.getCell(0).getStringCellValue());
+                    user.setEmail(row.getCell(1).getStringCellValue());
+                    user.setPasswordHash(row.getCell(2).getStringCellValue());
+                    user.setPhone(row.getCell(3).getStringCellValue());
+                    user.setProfilePicture(
+                            !row.getCell(4).getStringCellValue().isBlank() ? row.getCell(4).getStringCellValue() : "NOT_FOUND"
+                    );
+                    user.setOtpSecret(
+                            !row.getCell(5).getStringCellValue().isBlank() ? row.getCell(5).getStringCellValue() : "NOT_SET"
+                    );
+
+
+                    String addressData = row.getCell(6).getStringCellValue();
+                    Set<AddressForm> addressesForm = parseAddresses(addressData);
+                    Set<Address> addresses=getAddresses(addressesForm);
+                    user.setAddresses(addresses);
+
+                    String rolesData = row.getCell(7).getStringCellValue();
+                    String permissionData = row.getCell(8).getStringCellValue();
+
+                    Set<RoleForm> roleForms = parseRoles(rolesData,permissionData);
+                    Set<Role> roles=new HashSet<>();
+                    for (RoleForm roleForm : roleForms) {
+                        Role role = getRole(roleForm);
+                        roleDao.createRole(role);
+                        roles.add(role);
+                    }
+                    user.setRoles(roles);
+
+                    User savedUser = userMgntDao.createUser(user);
+
+                    UserForm savedUserForm = getUserForm(savedUser);
+
+                    createdUsers.add(savedUserForm);
+                } catch (Exception e) {
+                    errors.add("Error in row " + row.getRowNum() + ": " + e.getMessage());
+                }
+            }
+
+            response.put("createdUsers", createdUsers);
+            response.put("errors", errors);
+        } catch (IOException e) {
+            response.put("error", "Failed to read the Excel file: " + e.getMessage());
+        }
+
+        return response;
+    }
+
+    private Set<RoleForm> parseRoles(String rolesData, String permissionData) {
+        Set<RoleForm> roles = new HashSet<>();
+        String[] roleParts = rolesData.split(";");
+        String[] permissionParts = permissionData.split(";");
+
+        for (int i = 0; i < roleParts.length; i++) {
+            RoleForm role = new RoleForm();
+            role.setRoleName(roleParts[i].trim());
+
+            Set<PermissionForm> permissions = new HashSet<>();
+            if (i < permissionParts.length) {
+                String[] permissionsForRole = permissionParts[i].split(",");
+                for (String perm : permissionsForRole) {
+                    PermissionForm permission = new PermissionForm();
+                    permission.setPermissionName(perm.trim());
+                    permissions.add(permission);
+                }
+            }
+
+            role.setPermissions(permissions);
+            roles.add(role);
+        }
+
+        return roles;
+    }
+
+
+    private Set<AddressForm> parseAddresses(String data) {
+        Set<AddressForm> addresses = new HashSet<>();
+        String[] addressParts = data.split(";");
+
+        for (String part : addressParts) {
+            String[] details = part.split(",");
+            AddressForm address = new AddressForm();
+            address.setAddress(details[0]);
+            address.setCity(details[1]);
+            address.setState(details[2]);
+            address.setCountry(details[3]);
+            address.setZipCode(details[4]);
+            addresses.add(address);
+        }
+        return addresses;
     }
 
     @Override
@@ -174,7 +285,7 @@ public class UserServiceImpl implements UserService {
         newUser.setProfilePicture( !user.getProfilePicture().isBlank() ? user.getProfilePicture() : "NOT_FOUND");
         newUser.setOtpSecret( !user.getOtpSecret().isBlank() ? user.getOtpSecret() : "NOT_SET");
 
-        Set<Address> addresses = getAddresses(user);
+        Set<Address> addresses = getAddresses(user.getAddresses());
         newUser.setAddresses(addresses);
 
         Set<Role> roles = new HashSet<>();
@@ -188,9 +299,9 @@ public class UserServiceImpl implements UserService {
         return newUser;
     }
 
-    private Set<Address> getAddresses(UserForm user) {
+    private Set<Address> getAddresses(Set<AddressForm> addresseForms) {
         Set<Address> addresses = new HashSet<>();
-        for (AddressForm addressForm : user.getAddresses()) {
+        for (AddressForm addressForm : addresseForms) {
             Address address = getSingleAddress(addressForm);
 
             addressDao.createAddress(address);

@@ -4,6 +4,7 @@ import com.jocata.oms.data.config.HibernateConfig;
 import com.jocata.oms.data.um.dao.UserMgntDao;
 import com.jocata.oms.datamodel.um.entity.User;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +20,7 @@ public class UserMgntDaoImpl implements UserMgntDao {
     }
 
     @Override
+    @Transactional
     public User createUser(User user) {
         return hibernateConfig.saveEntity(user);
     }
