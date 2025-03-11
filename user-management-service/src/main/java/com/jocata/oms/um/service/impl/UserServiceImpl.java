@@ -282,7 +282,8 @@ public class UserServiceImpl implements UserService {
         newUser.setFullName(user.getFullName());
         newUser.setEmail(user.getEmail());
         newUser.setPhone(user.getPhone());
-        newUser.setPasswordHash(new BCryptPasswordEncoder().encode(user.getPasswordHash()));
+//        newUser.setPasswordHash(new BCryptPasswordEncoder().encode(user.getPasswordHash()));
+        newUser.setPasswordHash(user.getPasswordHash());
         newUser.setProfilePicture( !user.getProfilePicture().isBlank() ? user.getProfilePicture() : "NOT_FOUND");
         newUser.setOtpSecret( !user.getOtpSecret().isBlank() ? user.getOtpSecret() : "NOT_SET");
 
