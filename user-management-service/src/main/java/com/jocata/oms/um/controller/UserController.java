@@ -4,7 +4,6 @@ import com.jocata.oms.common.request.GenericRequestPayload;
 import com.jocata.oms.common.response.GenericResponsePayload;
 import com.jocata.oms.datamodel.um.form.SignInForm;
 import com.jocata.oms.datamodel.um.form.UserForm;
-import com.jocata.oms.um.jwt.JWTService;
 import com.jocata.oms.um.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,11 +21,9 @@ import java.util.UUID;
 public class UserController {
 
     private final UserService userService;
-    private final JWTService jwtService;
 
-    public UserController(UserService userService, JWTService jwtService) {
+    public UserController(UserService userService) {
         this.userService = userService;
-        this.jwtService = jwtService;
     }
 
     @PostMapping("/public/register")
@@ -61,49 +58,22 @@ public class UserController {
         ));
     }
 
-    @GetMapping("/user")
-    public ResponseEntity<GenericResponsePayload<?>> getUserByEmail(@RequestParam String email) {
-        UserForm userByEmail = userService.getUserByEmail(email);
-        return ResponseEntity.ok(new GenericResponsePayload<>(
-                UUID.randomUUID().toString(),
-                String.valueOf(Timestamp.from(Instant.now())),
-                userByEmail != null ? HttpStatus.FOUND.toString() : HttpStatus.NOT_FOUND.toString(),
-                HttpStatus.Series.SUCCESSFUL.toString(),
-                userByEmail != null ? userByEmail : "User not found"
-        ));
-    }
-
-
     @GetMapping("/public/sign-in")
     public ResponseEntity<GenericResponsePayload<?>> signIn(@RequestBody GenericRequestPayload<SignInForm> genericRequestPayload) {
         UserForm userByEmailAndPass = userService.getUserByEmail(
                 genericRequestPayload.getData().getEmail(),
                 genericRequestPayload.getData().getPassword());
 
-        if (userByEmailAndPass == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new GenericResponsePayload<>(
-                    UUID.randomUUID().toString(),
-                    String.valueOf(Timestamp.from(Instant.now())),
-                    HttpStatus.NOT_FOUND.toString(),
-                    HttpStatus.Series.CLIENT_ERROR.toString(),
-                    "User not found"
-            ));
-        }
-
-        //Generate JWT Token with role
-        String token = jwtService.generateToken(userByEmailAndPass.getEmail(),userByEmailAndPass.getRoles());
-
-        //Return token + user details
         return ResponseEntity.ok(new GenericResponsePayload<>(
                 UUID.randomUUID().toString(),
                 String.valueOf(Timestamp.from(Instant.now())),
-                HttpStatus.OK.toString(),
+                userByEmailAndPass != null ? HttpStatus.FOUND.toString() : HttpStatus.NOT_FOUND.toString(),
                 HttpStatus.Series.SUCCESSFUL.toString(),
-                Map.of("user", userByEmailAndPass, "token", token)
+                userByEmailAndPass != null ? userByEmailAndPass : "User not found"
         ));
     }
 
-    @GetMapping("/admin/allusers")
+    @GetMapping("/admin/all-users")
     public ResponseEntity<GenericResponsePayload<List<UserForm>>> getAllUsers() {
         List<UserForm> users = userService.getAllUsers();
         return ResponseEntity.ok(

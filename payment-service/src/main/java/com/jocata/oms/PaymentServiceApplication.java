@@ -2,10 +2,12 @@ package com.jocata.oms;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 @SpringBootApplication
-public class ApiGatewayInitializer {
+@EnableDiscoveryClient
+public class PaymentServiceApplication {
     public static void main(String[] args) {
-        SpringApplication.run(ApiGatewayInitializer.class, args);
+        SpringApplication.run(PaymentServiceApplication.class, args);
     }
 }
