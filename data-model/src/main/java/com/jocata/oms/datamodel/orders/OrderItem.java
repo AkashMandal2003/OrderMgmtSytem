@@ -17,7 +17,7 @@ public class OrderItem {
     private Integer orderItemId;
 
     @ManyToOne
-    @JoinColumn(name = "order_id", nullable = false, foreignKey = @ForeignKey(name = "fk_order_item_order"))
+    @JoinColumn(name = "order_id", nullable = false, referencedColumnName = "order_id")
     private OrderDetails order;
 
     @Column(name = "product_id", nullable = false)
