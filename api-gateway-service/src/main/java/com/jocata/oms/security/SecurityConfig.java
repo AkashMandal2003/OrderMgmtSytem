@@ -89,4 +89,20 @@ public class SecurityConfig {
     }
 
 
+    @Bean
+    public ReactiveUserDetailsService userDetailsService() {
+        return username -> Mono.empty();
+    }
+
+    @Bean
+    public ReactiveAuthenticationManager authenticationManager() {
+        return authentication -> {
+            if (authentication instanceof UsernamePasswordAuthenticationToken) {
+                UserDetails user = (UserDetails) authentication.getPrincipal();
+                return Mono.just(new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities()));
+            }
+            return Mono.empty();
+        };
+    }
+
 }
