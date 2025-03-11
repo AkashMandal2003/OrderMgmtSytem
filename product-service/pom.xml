@@ -26,6 +26,21 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.jocata.oms</groupId>
+            <artifactId>data-model</artifactId>
+            <version>${parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.jocata.oms</groupId>
+            <artifactId>data</artifactId>
+            <version>${parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.jocata.oms</groupId>
+            <artifactId>common</artifactId>
+            <version>${parent.version}</version>
+        </dependency>
 
     </dependencies>
 

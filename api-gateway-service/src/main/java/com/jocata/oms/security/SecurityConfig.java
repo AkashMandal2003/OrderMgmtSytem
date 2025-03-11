@@ -6,9 +6,14 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.ReactiveAuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
+import org.springframework.security.core.userdetails.UserDetails;
+
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.ServerAuthenticationEntryPoint;
 import org.springframework.security.web.server.authorization.ServerAccessDeniedHandler;
@@ -25,11 +30,15 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityWebFilterChain securityFilterChain(ServerHttpSecurity http) throws Exception {
+
+    public SecurityWebFilterChain securityFilterChain(ServerHttpSecurity http) {
         http.csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers("/api/v1/users/admin/**").hasRole("ADMIN")
                         .pathMatchers("/api/v1/users/user/**").hasAnyRole("USER", "ADMIN")
+
+                        .pathMatchers("/products/**").hasRole("ADMIN")
+
                         .pathMatchers(HttpMethod.GET, "/api/v1/users/public/**").permitAll()
                         .pathMatchers(HttpMethod.POST, "/api/v1/users/public/**").permitAll()
                         .anyExchange().authenticated()
@@ -81,5 +90,24 @@ public class SecurityConfig {
                             .wrap(body.getBytes()))
             );
         };
+
     }
+
+
+    @Bean
+    public ReactiveUserDetailsService userDetailsService() {
+        return username -> Mono.empty();
+    }
+
+    @Bean
+    public ReactiveAuthenticationManager authenticationManager() {
+        return authentication -> {
+            if (authentication instanceof UsernamePasswordAuthenticationToken) {
+                UserDetails user = (UserDetails) authentication.getPrincipal();
+                return Mono.just(new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities()));
+            }
+            return Mono.empty();
+        };
+    }
+
 }
