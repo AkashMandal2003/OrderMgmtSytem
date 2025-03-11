@@ -95,7 +95,7 @@ public class UserController {
         ));
     }
 
-    @GetMapping("/admin/all-users")
+    @GetMapping("/admin/allusers")
     public ResponseEntity<GenericResponsePayload<List<UserForm>>> getAllUsers() {
         List<UserForm> users = userService.getAllUsers();
         return ResponseEntity.ok(

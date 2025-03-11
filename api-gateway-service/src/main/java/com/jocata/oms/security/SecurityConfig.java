@@ -13,6 +13,7 @@ import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.UserDetails;
+
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.ServerAuthenticationEntryPoint;
 import org.springframework.security.web.server.authorization.ServerAccessDeniedHandler;
@@ -29,12 +30,15 @@ public class SecurityConfig {
     }
 
     @Bean
+
     public SecurityWebFilterChain securityFilterChain(ServerHttpSecurity http) {
         http.csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers("/api/v1/users/admin/**").hasRole("ADMIN")
                         .pathMatchers("/api/v1/users/user/**").hasAnyRole("USER", "ADMIN")
+
                         .pathMatchers("/products/**").hasRole("ADMIN")
+
                         .pathMatchers(HttpMethod.GET, "/api/v1/users/public/**").permitAll()
                         .pathMatchers(HttpMethod.POST, "/api/v1/users/public/**").permitAll()
                         .anyExchange().authenticated()
@@ -86,6 +90,7 @@ public class SecurityConfig {
                             .wrap(body.getBytes()))
             );
         };
+
     }
 
 
