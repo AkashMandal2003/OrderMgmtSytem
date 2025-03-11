@@ -31,6 +31,12 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public ProductForm getProduct(Integer productId) {
+        ProductDetails productDetails = productsDao.getProductDetails(productId);
+        return getProductForm(productDetails);
+    }
+
+    @Override
     public List<ProductForm> getAllProducts() {
         List<ProductDetails> allProducts = productsDao.getAllProducts();
         List<ProductForm> productForms = new ArrayList<>();

@@ -58,6 +58,26 @@ public class HibernateConfig {
         return null;
     }
 
+    public <T> T saveOrUpdateEntity(T entity) {
+        Session session = null;
+        Transaction tx =null;
+        try {
+            session = this.getSession();
+            tx=session.beginTransaction();
+            session.merge(entity);
+            tx.commit();
+            return entity;
+
+        } catch (Exception e) {
+            if (tx != null) {
+                tx.rollback();
+            }
+        } finally {
+            this.closeSession(session);
+        }
+        return null;
+    }
+
     public <T> T findEntityById(Class<T> entityClass, Serializable primaryId) {
 
         Session session = null;
