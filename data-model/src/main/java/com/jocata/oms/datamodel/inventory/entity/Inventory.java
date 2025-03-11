@@ -1,4 +1,4 @@
-package com.jocata.oms.datamodel.inventory;
+package com.jocata.oms.datamodel.inventory.entity;
 
 import jakarta.persistence.*;
 

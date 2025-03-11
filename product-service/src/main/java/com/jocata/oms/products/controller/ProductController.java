@@ -35,6 +35,20 @@ public class ProductController {
                 HttpStatus.CREATED);
     }
 
+
+    @GetMapping("/product/{productId}")
+    public ResponseEntity<GenericResponsePayload<ProductForm>> createProduct(@PathVariable Integer productId) {
+        ProductForm product = productService.getProduct(productId);
+        return new ResponseEntity<GenericResponsePayload<ProductForm>>(
+                new GenericResponsePayload<ProductForm>(UUID.randomUUID().toString(),
+                        String.valueOf(Timestamp.from(Instant.now())),
+                        HttpStatus.CREATED.toString(),
+                        HttpStatus.Series.SUCCESSFUL.toString()
+                        , product),
+                HttpStatus.CREATED);
+    }
+
+
     @GetMapping
     public ResponseEntity<GenericResponsePayload<List<ProductForm>>> getAllProducts() {
         List<ProductForm> allProducts = productService.getAllProducts();

@@ -38,6 +38,7 @@ public class SecurityConfig {
                         .pathMatchers("/api/v1/users/user/**").hasAnyRole("USER", "ADMIN")
 
                         .pathMatchers("/products/**").hasRole("ADMIN")
+                        .pathMatchers("/inventory/**").hasRole("ADMIN")
 
                         .pathMatchers(HttpMethod.GET, "/api/v1/users/public/**").permitAll()
                         .pathMatchers(HttpMethod.POST, "/api/v1/users/public/**").permitAll()
