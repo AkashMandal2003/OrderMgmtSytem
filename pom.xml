@@ -22,6 +22,10 @@
         <module>data-model</module>
         <module>user-management-service</module>
         <module>common</module>
+        <module>product-service</module>
+        <module>payment-service</module>
+        <module>inventory-service</module>
+        <module>orders-service</module>
     </modules>
 
     <properties>
