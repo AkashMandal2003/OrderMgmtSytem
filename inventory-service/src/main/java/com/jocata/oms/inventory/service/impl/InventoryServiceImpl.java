@@ -34,7 +34,7 @@ public class InventoryServiceImpl implements InventoryService {
 
         ResponseEntity<GenericResponsePayload<ProductForm>> response = restTemplate.exchange(
                 productUrl,
-                HttpMethod.GET.GET,
+                HttpMethod.GET,
                 null,
                 new ParameterizedTypeReference<GenericResponsePayload<ProductForm>>() {
                 }

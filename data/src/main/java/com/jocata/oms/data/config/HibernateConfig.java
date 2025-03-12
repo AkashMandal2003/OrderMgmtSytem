@@ -174,6 +174,31 @@ public class HibernateConfig {
         return null;
     }
 
+    public <T> List<T> findEntitiesByCriteria(Class<T> entityClass, String primaryPropertyName, Serializable primaryId) {
+
+        Session session = null;
+        try {
+            session = this.getSession();
+            HibernateCriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+            JpaCriteriaQuery<T> criteriaQuery = criteriaBuilder.createQuery(entityClass);
+            JpaRoot<T> root = criteriaQuery.from(entityClass);
+
+            String[] props = this.checkIfSplit(primaryPropertyName);
+            if(props.length == 2) {
+                criteriaQuery.select(root).where(criteriaBuilder.equal(root.get(props[0]).get(props[1]), primaryId));
+            }else {
+                criteriaQuery.select(root).where(criteriaBuilder.equal(root.get(primaryPropertyName), primaryId));
+            }
+
+            return session.createQuery(criteriaQuery).getResultList();
+        } catch (Exception e) {
+            session.getTransaction().rollback();
+        } finally {
+            this.closeSession(session);
+        }
+        return Collections.emptyList();
+    }
+
     public <T> T findEntityByMultipleCriteria(Class<T> entityClass, Map<String, Object> criteriaMap) {
         Session session = null;
         try {

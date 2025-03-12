@@ -1,11 +1,10 @@
-package com.jocata.oms.datamodel.orders;
+package com.jocata.oms.datamodel.orders.entity;
 
 import com.jocata.oms.datamodel.orders.enums.OrderStatus;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.List;
 
 @Entity
 @Table(name = "`Order`")
@@ -18,6 +17,9 @@ public class OrderDetails {
 
     @Column(name = "customer_id", nullable = false)
     private Integer customerId;
+
+    @Column(name = "delivery_address", nullable = false, length = 255)
+    private String deliveryAddress;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "order_status", nullable = false)
@@ -110,4 +112,11 @@ public class OrderDetails {
         return updatedAt;
     }
 
+    public String getDeliveryAddress() {
+        return deliveryAddress;
+    }
+
+    public void setDeliveryAddress(String deliveryAddress) {
+        this.deliveryAddress = deliveryAddress;
+    }
 }
