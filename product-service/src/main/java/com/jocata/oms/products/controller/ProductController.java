@@ -42,10 +42,10 @@ public class ProductController {
         return new ResponseEntity<GenericResponsePayload<ProductForm>>(
                 new GenericResponsePayload<ProductForm>(UUID.randomUUID().toString(),
                         String.valueOf(Timestamp.from(Instant.now())),
-                        HttpStatus.CREATED.toString(),
+                        HttpStatus.FOUND.toString(),
                         HttpStatus.Series.SUCCESSFUL.toString()
                         , product),
-                HttpStatus.CREATED);
+                HttpStatus.OK);
     }
 
 

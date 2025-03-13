@@ -4,6 +4,7 @@ import com.jocata.oms.data.products.dao.ProductsDao;
 import com.jocata.oms.datamodel.product.entity.ProductDetails;
 import com.jocata.oms.datamodel.product.form.ProductForm;
 import com.jocata.oms.products.service.ProductService;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -31,6 +32,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Cacheable(value = "products", key = "#productId")
     public ProductForm getProduct(Integer productId) {
         ProductDetails productDetails = productsDao.getProductDetails(productId);
         return getProductForm(productDetails);

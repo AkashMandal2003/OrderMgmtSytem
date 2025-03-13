@@ -1,14 +1,13 @@
-package com.jocata.oms.datamodel.orders;
+package com.jocata.oms.datamodel.orders.entity;
 
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.List;
 
 @Entity
-@Table(name = "OrderItem")
+@Table(name = "orderitem")
 public class OrderItem {
 
     @Id
