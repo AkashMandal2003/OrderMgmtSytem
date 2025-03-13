@@ -11,10 +11,12 @@ import com.jocata.oms.datamodel.orders.form.OrderItemForm;
 import com.jocata.oms.datamodel.product.form.ProductForm;
 import com.jocata.oms.datamodel.um.form.UserForm;
 import com.jocata.oms.oders.service.OrderService;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
@@ -32,6 +34,9 @@ public class OrderServiceImpl implements OrderService {
 
     private static final String USER_URI = "http://localhost:8081/api/v1/users/user/";
     private static final String PRODUCT_URI = "http://localhost:8085/products/product/";
+
+    private static final String USER_SERVICE = "userService";
+    private static final String PRODUCT_SERVICE = "productService";
 
     public OrderServiceImpl(OrderDao orderDao, OrderItemDao orderItemDao, RestTemplate restTemplate) {
         this.orderDao = orderDao;
@@ -67,29 +72,28 @@ public class OrderServiceImpl implements OrderService {
             return "Order cancelled";
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException("Error cancelling order");
         }
+        return "Order not cancelled";
     }
 
     @Override
     public OrderForm getOrderById(Integer orderId) {
+
         try {
             OrderDetails orderDetails = orderDao.getOrderById(orderId);
             if (orderDetails == null) {
                 throw new RuntimeException("Order not found with ID: " + orderId);
             }
-
             List<OrderItem> orderItems = orderItemDao.getOrderItemsByOrderId(orderId);
             List<OrderItemForm> orderItemForms = new ArrayList<>();
             for (OrderItem orderItem : orderItems) {
                 orderItemForms.add(convertToOrderItemForm(orderItem));
             }
-
             return buildOrderForm(orderDetails, orderItemForms);
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException("Error retrieving order");
         }
+        return new OrderForm();
     }
 
     private OrderDetails buildOrderDetails(OrderForm orderForm) {
@@ -132,63 +136,95 @@ public class OrderServiceImpl implements OrderService {
 
     private OrderItemForm convertToOrderItemForm(OrderItem savedOrderItem) {
         OrderItemForm savedOrderItemForm = new OrderItemForm();
-        savedOrderItemForm.setProduct(getProduct(savedOrderItem.getProductId()));
+
+        ProductForm product;
+        try {
+            product = getProduct(savedOrderItem.getProductId());
+        } catch (Exception e) {
+            product = fallbackGetProduct(savedOrderItem.getProductId(), e);
+        }
+
+        savedOrderItemForm.setProduct(product);
         savedOrderItemForm.setQuantity(savedOrderItem.getQuantity());
         return savedOrderItemForm;
     }
 
     private OrderForm buildOrderForm(OrderDetails orderDetails, List<OrderItemForm> savedOrderItemsFormList) {
+        UserForm userForm;
         try {
-            UserForm userForm = getCustomer(orderDetails.getCustomerId());
-
-            OrderForm savedOrderForm = new OrderForm();
-            savedOrderForm.setOrderId(String.valueOf(orderDetails.getOrderId()));
-            savedOrderForm.setCustomerId(userForm.getUserId());
-            savedOrderForm.setCustomerName(userForm.getFullName());
-            savedOrderForm.setCustomerEmail(userForm.getEmail());
-            savedOrderForm.setCustomerPhone(userForm.getPhone());
-            savedOrderForm.setCustomerAddress(orderDetails.getDeliveryAddress());
-            savedOrderForm.setTotalPrice(orderDetails.getTotalAmount().toString());
-            savedOrderForm.setOrderStatus(orderDetails.getOrderStatus().name());
-            savedOrderForm.setOrderDate(orderDetails.getOrderDate().toString());
-            savedOrderForm.setOrderItems(savedOrderItemsFormList);
-
-            return savedOrderForm;
+            userForm = getCustomer(orderDetails.getCustomerId());
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("Error building order response");
+            userForm = fallbackGetCustomer(orderDetails.getCustomerId(), e);
         }
+
+        OrderForm savedOrderForm = new OrderForm();
+        savedOrderForm.setOrderId(String.valueOf(orderDetails.getOrderId()));
+        savedOrderForm.setCustomerId(userForm.getUserId());
+        savedOrderForm.setCustomerName(userForm.getFullName());
+        savedOrderForm.setCustomerEmail(userForm.getEmail());
+        savedOrderForm.setCustomerPhone(userForm.getPhone());
+        savedOrderForm.setCustomerAddress(orderDetails.getDeliveryAddress());
+        savedOrderForm.setTotalPrice(orderDetails.getTotalAmount().toString());
+        savedOrderForm.setOrderStatus(orderDetails.getOrderStatus().name());
+        savedOrderForm.setOrderDate(orderDetails.getOrderDate().toString());
+        savedOrderForm.setOrderItems(savedOrderItemsFormList);
+
+        return savedOrderForm;
     }
 
-    private UserForm getCustomer(Integer customerId) {
+
+    @CircuitBreaker(name = USER_SERVICE, fallbackMethod = "fallbackGetCustomer")
+    public UserForm getCustomer(Integer customerId) {
         try {
             String userUrl = USER_URI + customerId;
             ResponseEntity<GenericResponsePayload<UserForm>> response = restTemplate.exchange(
                     userUrl,
                     HttpMethod.GET,
                     null,
-                    new ParameterizedTypeReference<GenericResponsePayload<UserForm>>() {}
+                    new ParameterizedTypeReference<GenericResponsePayload<UserForm>>() {
+                    }
             );
             return response.getBody().getData();
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("Error retrieving customer details");
+            throw e;
         }
+
     }
 
-    private ProductForm getProduct(Integer productId) {
+    @CircuitBreaker(name = PRODUCT_SERVICE, fallbackMethod = "fallbackGetProduct")
+    public ProductForm getProduct(Integer productId) {
         try {
             String productUrl = PRODUCT_URI + productId;
             ResponseEntity<GenericResponsePayload<ProductForm>> response = restTemplate.exchange(
                     productUrl,
                     HttpMethod.GET,
                     null,
-                    new ParameterizedTypeReference<GenericResponsePayload<ProductForm>>() {}
+                    new ParameterizedTypeReference<GenericResponsePayload<ProductForm>>() {
+                    }
             );
             return response.getBody().getData();
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("Error retrieving product details");
+            throw e;
         }
+
+    }
+
+    private UserForm fallbackGetCustomer(Integer customerId, Throwable t) {
+        System.err.println("Fallback triggered for getCustomer: " + t.getMessage());
+        UserForm defaultUser = new UserForm();
+        defaultUser.setUserId("0");
+        defaultUser.setFullName("Unknown User");
+        defaultUser.setEmail("unknown@example.com");
+        defaultUser.setPhone("0000000000");
+        return defaultUser;
+    }
+
+    private ProductForm fallbackGetProduct(Integer productId,Throwable t) {
+        System.err.println("Fallback triggered for getProduct: " + t.getMessage());
+        ProductForm defaultProduct = new ProductForm();
+        defaultProduct.setProductId("0");
+        defaultProduct.setName("Unknown Product");
+        defaultProduct.setPrice("0.00");
+        return defaultProduct;
     }
 }
