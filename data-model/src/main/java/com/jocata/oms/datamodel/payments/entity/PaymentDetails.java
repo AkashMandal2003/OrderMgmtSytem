@@ -1,4 +1,4 @@
-package com.jocata.oms.datamodel.payments;
+package com.jocata.oms.datamodel.payments.entity;
 
 import com.jocata.oms.datamodel.payments.enums.PaymentMethod;
 import com.jocata.oms.datamodel.payments.enums.PaymentStatus;
@@ -7,7 +7,6 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "Payment")

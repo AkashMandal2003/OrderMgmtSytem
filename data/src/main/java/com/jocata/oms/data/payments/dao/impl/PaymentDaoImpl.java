@@ -2,7 +2,7 @@ package com.jocata.oms.data.payments.dao.impl;
 
 import com.jocata.oms.data.config.HibernateConfig;
 import com.jocata.oms.data.payments.dao.PaymentDao;
-import com.jocata.oms.datamodel.payments.PaymentDetails;
+import com.jocata.oms.datamodel.payments.entity.PaymentDetails;
 import org.springframework.stereotype.Repository;
 
 @Repository
