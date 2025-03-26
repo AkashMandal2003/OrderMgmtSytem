@@ -40,6 +40,7 @@ public class SecurityConfig {
                         .pathMatchers("/products/**").hasRole("ADMIN")
                         .pathMatchers("/inventory/**").hasRole("ADMIN")
                         .pathMatchers("/orders/**").hasAnyRole("USER","ADMIN")
+                        .pathMatchers("/payments/**").hasAnyRole("USER","ADMIN")
 
                         .pathMatchers(HttpMethod.GET, "/api/v1/users/public/**").permitAll()
                         .pathMatchers(HttpMethod.POST, "/api/v1/users/public/**").permitAll()
