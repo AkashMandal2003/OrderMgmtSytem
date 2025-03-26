@@ -1,5 +1,6 @@
 package com.jocata.oms.oders.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jocata.oms.common.response.GenericResponsePayload;
 import com.jocata.oms.data.order.OrderDao;
 import com.jocata.oms.data.order.OrderItemDao;
@@ -11,6 +12,7 @@ import com.jocata.oms.datamodel.orders.form.OrderItemForm;
 import com.jocata.oms.datamodel.product.form.ProductForm;
 import com.jocata.oms.datamodel.um.form.UserForm;
 import com.jocata.oms.oders.service.OrderService;
+import com.jocata.oms.publisher.OrderEventPublisher;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
@@ -31,6 +33,8 @@ public class OrderServiceImpl implements OrderService {
     private final OrderDao orderDao;
     private final OrderItemDao orderItemDao;
     private final RestTemplate restTemplate;
+    private final OrderEventPublisher orderEventPublisher;
+    private final ObjectMapper objectMapper;
 
     private static final String USER_URI = "http://localhost:8081/api/v1/users/user/";
     private static final String PRODUCT_URI = "http://localhost:8085/products/product/";
@@ -38,10 +42,12 @@ public class OrderServiceImpl implements OrderService {
     private static final String USER_SERVICE = "userService";
     private static final String PRODUCT_SERVICE = "productService";
 
-    public OrderServiceImpl(OrderDao orderDao, OrderItemDao orderItemDao, RestTemplate restTemplate) {
+    public OrderServiceImpl(OrderDao orderDao, OrderItemDao orderItemDao, RestTemplate restTemplate, OrderEventPublisher orderEventPublisher, ObjectMapper objectMapper) {
         this.orderDao = orderDao;
         this.orderItemDao = orderItemDao;
         this.restTemplate = restTemplate;
+        this.orderEventPublisher = orderEventPublisher;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -56,7 +62,13 @@ public class OrderServiceImpl implements OrderService {
             OrderDetails savedOrder = orderDao.placeOrder(order);
             List<OrderItemForm> savedOrderItemsFormList = saveOrderItems(orderItems, savedOrder);
 
-            return buildOrderForm(savedOrder, savedOrderItemsFormList);
+            OrderForm orderResponse = buildOrderForm(savedOrder, savedOrderItemsFormList);
+            String jsonString = objectMapper.writeValueAsString(orderResponse);
+
+            //kafka event creation
+            orderEventPublisher.publishOrderEvent(jsonString);
+
+            return orderResponse;
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("Error creating order");

@@ -55,17 +55,16 @@ public class EmailServiceImpl implements EmailService {
                     "orderId", orderForm.getOrderId(),
                     "downloadLink", "WWW.GOOGLE.COM",
                     "products", orderForm.getOrderItems(),
-                    "totalAmount", orderForm.getTotalPrice()
+                    "totalAmount", orderForm.getTotalPrice(),
+                    "paymentStatus",orderForm.getOrderStatus()
             ));
             String emailContent = templateEngine.process("template", context);
 
             helper.setText(emailContent, true);
 
-            if (!file.isEmpty()) {
+            if (file!=null && !file.isEmpty()) {
                 InputStreamSource fileSource = new ByteArrayResource(file.getBytes());
                 helper.addAttachment(file.getOriginalFilename(), fileSource, file.getContentType());
-            } else {
-                return "Error: No file uploaded!";
             }
 
             mailSender.send(message);

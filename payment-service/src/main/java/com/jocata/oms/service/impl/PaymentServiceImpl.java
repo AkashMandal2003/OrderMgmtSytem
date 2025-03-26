@@ -1,10 +1,13 @@
 package com.jocata.oms.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jocata.oms.data.payments.dao.PaymentDao;
 import com.jocata.oms.datamodel.payments.entity.PaymentDetails;
 import com.jocata.oms.datamodel.payments.enums.PaymentMethod;
 import com.jocata.oms.datamodel.payments.enums.PaymentStatus;
 import com.jocata.oms.datamodel.payments.form.PaymentForm;
+import com.jocata.oms.publisher.PaymentEventPublisher;
 import com.jocata.oms.service.PaymentService;
 import org.springframework.stereotype.Service;
 
@@ -15,9 +18,13 @@ import java.util.UUID;
 public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentDao paymentDao;
+    private final PaymentEventPublisher paymentEventPublisher;
+    private final ObjectMapper objectMapper;
 
-    public PaymentServiceImpl(PaymentDao paymentDao) {
+    public PaymentServiceImpl(PaymentDao paymentDao, PaymentEventPublisher paymentEventPublisher, ObjectMapper objectMapper) {
         this.paymentDao = paymentDao;
+        this.paymentEventPublisher = paymentEventPublisher;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -25,7 +32,19 @@ public class PaymentServiceImpl implements PaymentService {
 
         PaymentDetails paymentDetails = paymentFormToPaymentDetails(paymentForm);
         PaymentDetails savedPayment = paymentDao.createPayment(paymentDetails);
-        return paymentDetailsToPaymentForm(savedPayment);
+
+        PaymentForm paymentResponse = paymentDetailsToPaymentForm(savedPayment);
+        String paymentJson;
+        try {
+            paymentJson=objectMapper.writeValueAsString(paymentResponse);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+        //kafka publisher
+        paymentEventPublisher.publishPaymentEvent(paymentJson);
+
+        return paymentResponse;
 
     }
 
