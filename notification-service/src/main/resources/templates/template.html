@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .container {
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #333;
+        }
+        p {
+            font-size: 16px;
+            color: #555;
+        }
+        .highlight {
+            font-weight: bold;
+        }
+        .btn {
+            color: darkblue;
+        }
+        td{
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Hello, <span class="highlight" th:text="${recipientName}">Customer</span>!</h2>
+    <p>We have received your order.</p>
+    <p><strong>Order ID:</strong> <span th:text="${orderId}">123456</span></p>
+
+    <h3>Product List:</h3>
+    <table>
+        <thead>
+        <tr>
+            <th>Product Name</th>
+            <th>Price</th>
+            <th>Quantity</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="product : ${products}">
+            <td th:text="${product.product.name}">Product Name</td>
+            <td th:text="${product.product.price}">$0.00</td>
+            <td th:text="${product.quantity}">0</td>
+        </tr>
+        </tbody>
+    </table>
+    <p><strong>Total Amount:</strong> <span th:text="${totalAmount}">00.00</span></p>
+    <p>You can download your order details using the button below:</p>
+    <a th:href="${downloadLink}" class="btn">See Order Details</a>
+    <p>Thank you!</p>
+</div>
+</body>
+</html>
+
